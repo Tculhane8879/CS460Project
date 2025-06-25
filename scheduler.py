@@ -74,7 +74,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-    print("Scheduler initialized.")
 
     # FOR TESTING PURPOSES
     # Define tasks
@@ -88,6 +87,13 @@ if __name__ == "__main__":
 
     # Initialize empty schedule
     schedule = {}
+
+    # FIRST TESTING OF CAN_ASSIGN(), ASSIGN_SCORE()
+    print("\nScoring options for task1:")
+    for i, slot in enumerate(time_slots):
+        s = assign_score(task1, i, time_slots, schedule)
+        if s > float('-inf'):
+            print(f"{slot}: {s}")
 
     # Placeholder for scheduling logic
     print("\nEmpty schedule initialized.")
