@@ -1,9 +1,12 @@
 """
 Personal Schedule Optimizer
-Author: <your name>
-Description: Greedy algorithm for assigning tasks to time slots based 
-             on soft preferences and hard constraints.
+
+Author:         Thomas Culhane
+
+Description:    Greedy algorithm for assigning tasks to time slots based 
+                on soft preferences and hard constraints.
 """
+
 class Task:
     def __init__(self, name, duration, preference):
         self.name = name                # name of the task
@@ -13,6 +16,7 @@ class Task:
     def __repr__(self):
         return f"Task({self.name}, {self.duration}, {self.preference})"
     
+
 # all time slots tasks can be assigned to
 time_slots = [
     "M 7am", "M 8am", "M 9am", "M 10am", "M 11am", "M 12pm", "M 1pm", "M 2pm", "M 3pm", 
@@ -31,6 +35,21 @@ time_slots = [
     "SU 4pm", "SU 5pm", "SU 6pm", "SU 7pm", "SU 8pm", "SU 9pm", "SU 10pm", "SU 11pm", "SU 12am",
 ]
 
+def can_assign(task, start_time, time_slots, schedule):
+    """ Determines whether a given task can be assigned to a starting time slot and 
+        proceed for its full duration, without conflictions with other tasks
+    """
+    
+    duration = task.duration
+    for i in range(duration):
+        slot = time_slots[start_time + i]
+        if slot in schedule:
+            return False
+        
+    return True
+
+
+
 
 def main():
     print("Scheduler initialized.")
@@ -39,6 +58,7 @@ if __name__ == "__main__":
     main()
     print("Scheduler initialized.")
 
+    # FOR TESTING PURPOSES
     # Define tasks
     task1 = Task("Study Algorithms", 1, ["M 9am", "T 9am"])
     task2 = Task("Gym", 2, ["T 5pm", "W 4pm"])
@@ -51,5 +71,5 @@ if __name__ == "__main__":
     # Initialize empty schedule
     schedule = {}
 
-    # Placeholder for scheduling logic (coming next)
+    # Placeholder for scheduling logic
     print("\nEmpty schedule initialized.")
