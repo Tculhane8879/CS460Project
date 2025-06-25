@@ -35,20 +35,38 @@ time_slots = [
     "SU 4pm", "SU 5pm", "SU 6pm", "SU 7pm", "SU 8pm", "SU 9pm", "SU 10pm", "SU 11pm", "SU 12am",
 ]
 
-def can_assign(task, start_time, time_slots, schedule):
+def can_assign(task, start_idx, time_slots, schedule):
     """ Determines whether a given task can be assigned to a starting time slot and 
         proceed for its full duration, without conflictions with other tasks
     """
     
     duration = task.duration
     for i in range(duration):
-        slot = time_slots[start_time + i]
+        slot = time_slots[start_idx + i]
         if slot in schedule:
             return False
-        
     return True
 
+def assign_score(task, start_idx, time_slots, schedule):
+    """ Return the score for task being assigned at start_time. Considers soft preferences
+        and ensures validity of slot assignment using can_assign()
+    """
 
+    # if start_idx is invalid, return -inf
+    if not can_assign(task, start_idx, time_slots, schedule):
+        return float('-inf')
+    
+    starting_time = time_slots[start_idx]
+    score = 0
+
+    # FIXME: ADD MORE SCORING LOGIC, TWEAK EXISTING LOGIC BASED ON TESTING
+
+    if starting_time in task.preference:
+        score += 10
+    else:
+        score -= 5
+
+    return score
 
 
 def main():
