@@ -59,7 +59,7 @@ def assign_score(task, start_idx, time_slots, schedule):
     starting_time = time_slots[start_idx]
     score = 0
 
-    # FIXME: ADD MORE SCORING LOGIC, TWEAK EXISTING LOGIC BASED ON TESTING
+    # FIXME: ADD MORE SCORING LOGIC, TWEAK EXISTING LOGIC AFTER IMPLEMENTING 
 
     if starting_time in task.preference:
         score += 10
@@ -67,6 +67,30 @@ def assign_score(task, start_idx, time_slots, schedule):
         score -= 5
 
     return score
+
+def schedule_tasks(tasks, time_slots):
+    """ Greedily assign tasks to the best available time slot based on preference scores """
+    schedule = {}
+
+    for task in tasks:
+        best_score = float('-inf')
+        best_idx = None
+
+        for i in range(len(time_slots) - task.duration + 1):
+            score = assign_score(task, i, time_slots, schedule)
+            if score > best_score:
+                best_score = score
+                best_idx = i
+
+        if best_idx is not None:
+            for j in range(task.duration):
+                schedule[time_slots[best_idx + j]] = task
+            print(f"Scheduled '{task.name}' at {time_slots[best_idx]} (score={best_score})")
+        else:
+            print(f"Could not scedule '{task.name}")
+
+    return schedule
+
 
 
 def main():
@@ -97,3 +121,12 @@ if __name__ == "__main__":
 
     # Placeholder for scheduling logic
     print("\nEmpty schedule initialized.")
+
+    # Initialize and run the greedy scheduler
+    final_schedule = schedule_tasks(tasks, time_slots)
+
+    # Print the final schedule
+    print("\nFinal Schedule:")
+    for slot in time_slots:
+        if slot in final_schedule:
+            print(f"{slot}: {final_schedule[slot].name}")
