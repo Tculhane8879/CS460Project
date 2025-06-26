@@ -71,14 +71,14 @@ def assign_score(task, start_idx, time_slots, schedule):
         score -= 5
 
     # time of day preference bonus
-    if task.prefs.get("prefer_mornings") and hour in {"7am", "8am", "9am", "10am"}:
-        score += 3
+    if hour in {"7am", "8am", "9am", "10am"}:
+        score += task.prefs.get("prefer_mornings", 0)
     if task.prefs.get("prefer_nights") and hour in {"8pm", "9pm", "10pm", "11pm"}:
-        score += 3
+        score += task.prefs.get("prefer_nights", 0)
 
     # weekend penalty
-    if task.prefs.get("avoid_weekends") and day in {"SA", "SU"}:
-        score -= 4
+    if day in {"SA", "SU"}:
+        score -= task.prefs.get("avoid_weekends", 0)
 
     # back-to-back tasks penalty
     prev_idx = start_idx - 1
@@ -123,13 +123,13 @@ if __name__ == "__main__":
     # Define tasks
     task1 = Task("Study Algorithms", 1, ["M 9am", "T 9am"],
                 prefs= {
-                    "prefer_mornings": True,
-                    "avoid_weekends": True,
+                    "prefer_mornings": 3,
+                    "avoid_weekends": 2,
                     })
     task2 = Task("Gym", 2, ["T 5pm", "W 4pm"],
                 prefs= {
-                    "prefer_nights": True,
-                    "avoid_weekends": False
+                    "prefer_nights": 2,
+                    "avoid_weekends": 0
                 })
     tasks = [task1, task2]
 
