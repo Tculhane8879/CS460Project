@@ -70,7 +70,7 @@ def assign_score(task, start_idx, time_slots, schedule):
     else:
         score -= 5
 
-    # time of day preference
+    # time of day preference bonus
     if task.prefs.get("prefer_mornings") and hour in {"7am", "8am", "9am", "10am"}:
         score += 3
     if task.prefs.get("prefer_nights") and hour in {"8pm", "9pm", "10pm", "11pm"}:
