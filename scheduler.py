@@ -8,13 +8,14 @@ Description:    Greedy algorithm for assigning tasks to time slots based
 """
 
 class Task:
-    def __init__(self, name, duration, preference):
-        self.name = name                # name of the task
-        self.duration = duration        # time (hrs) task will take
-        self.preference = preference    # list of preferred time slots
+    def __init__(self, name, duration, preference, prefs=None):
+        self.name = name                    # name of the task
+        self.duration = duration            # time (hrs) task will take
+        self.preference = preference        # list of preferred time slots
+        self.prefs = prefs if prefs else {} # dict containing general preferences
 
     def __repr__(self):
-        return f"Task({self.name}, {self.duration}, {self.preference})"
+        return f"Task({self.name}, {self.duration}, {self.preference}, {self.prefs})"
     
 
 # all time slots tasks can be assigned to
@@ -42,7 +43,10 @@ def can_assign(task, start_idx, time_slots, schedule):
     
     duration = task.duration
     for i in range(duration):
-        slot = time_slots[start_idx + i]
+        if start_idx + i < len(time_slots) - 1:
+            slot = time_slots[start_idx + i]
+        else:
+            return False
         if slot in schedule:
             return False
     return True
@@ -57,14 +61,32 @@ def assign_score(task, start_idx, time_slots, schedule):
         return float('-inf')
     
     starting_time = time_slots[start_idx]
+    day, hour = starting_time.split()
     score = 0
 
-    # FIXME: ADD MORE SCORING LOGIC, TWEAK EXISTING LOGIC AFTER IMPLEMENTING 
-
+    # matching time slot preference bonus
     if starting_time in task.preference:
         score += 10
     else:
         score -= 5
+
+    # time of day preference
+    if task.prefs.get("prefer_mornings") and hour in {"7am", "8am", "9am", "10am"}:
+        score += 3
+    if task.prefs.get("prefer_nights") and hour in {"8pm", "9pm", "10pm", "11pm"}:
+        score += 3
+
+    # weekend penalty
+    if task.prefs.get("avoid_weekends") and day in {"SA", "SU"}:
+        score -= 4
+
+    # back-to-back tasks penalty
+    prev_idx = start_idx - 1
+    next_idx = start_idx + 1
+    if prev_idx >= 0 and time_slots[prev_idx] in schedule:
+        score -= 2
+    if next_idx < len(time_slots) and time_slots[next_idx] in schedule:
+        score -= 2
 
     return score
 
@@ -87,11 +109,9 @@ def schedule_tasks(tasks, time_slots):
                 schedule[time_slots[best_idx + j]] = task
             print(f"Scheduled '{task.name}' at {time_slots[best_idx]} (score={best_score})")
         else:
-            print(f"Could not scedule '{task.name}")
+            print(f"Could not schedule '{task.name}")
 
     return schedule
-
-
 
 def main():
     print("Scheduler initialized.")
@@ -101,8 +121,16 @@ if __name__ == "__main__":
 
     # FOR TESTING PURPOSES
     # Define tasks
-    task1 = Task("Study Algorithms", 1, ["M 9am", "T 9am"])
-    task2 = Task("Gym", 2, ["T 5pm", "W 4pm"])
+    task1 = Task("Study Algorithms", 1, ["M 9am", "T 9am"],
+                prefs= {
+                    "prefer_mornings": True,
+                    "avoid_weekends": True,
+                    })
+    task2 = Task("Gym", 2, ["T 5pm", "W 4pm"],
+                prefs= {
+                    "prefer_nights": True,
+                    "avoid_weekends": False
+                })
     tasks = [task1, task2]
 
     # Print tasks for now
@@ -115,7 +143,13 @@ if __name__ == "__main__":
     # FIRST TESTING OF CAN_ASSIGN(), ASSIGN_SCORE()
     print("\nScoring options for task1:")
     for i, slot in enumerate(time_slots):
-        s = assign_score(task1, i, time_slots, schedule)
+        s = assign_score(tasks[0], i, time_slots, schedule)
+        if s > float('-inf'):
+            print(f"{slot}: {s}")
+
+    print("\nScoring options for task2:")
+    for i, slot in enumerate(time_slots):
+        s = assign_score(tasks[1], i, time_slots, schedule)
         if s > float('-inf'):
             print(f"{slot}: {s}")
 
