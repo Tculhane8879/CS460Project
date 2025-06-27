@@ -7,6 +7,8 @@ Description:    Greedy algorithm for assigning tasks to time slots based
                 on soft preferences and hard constraints.
 """
 
+from collections import defaultdict
+
 class Task:
     def __init__(self, name, duration, preference, prefs=None):
         self.name = name                    # name of the task
@@ -92,6 +94,7 @@ def assign_score(task, start_idx, time_slots, schedule):
 
 def schedule_tasks(tasks, time_slots):
     """ Greedily assign tasks to the best available time slot based on preference scores """
+    
     schedule = {}
 
     for task in tasks:
@@ -112,6 +115,50 @@ def schedule_tasks(tasks, time_slots):
             print(f"Could not schedule '{task.name}")
 
     return schedule
+
+def display_schedule(schedule, time_slots):
+    """ Displays weekly schedule in table format """
+
+    days = ["M", "T", "W", "TH", "F", "SA", "SU"]
+    hours = [
+        "7am", "8am", "9am", "10am", "11am", "12pm", "1pm", "2pm", "3pm", 
+        "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm", "12am"
+    ]
+
+    col_width = 18
+    total_cols = len(days) + 1
+    separator = "+" + "+".join(["-" * col_width for _ in range(total_cols)]) + "+"
+
+    # Build the schedule table
+    table = defaultdict(lambda: {day: "" for day in days})
+    for slot, task in schedule.items():
+        day, hour = slot.split()
+        table[hour][day] = task.name
+
+    # Build output lines manually
+    lines = []
+    lines.append("Final Weekly Schedule\n")
+    lines.append(separator)
+
+    # Header row
+    header = ["Time".center(col_width)] + [day.center(col_width) for day in days]
+    lines.append("|" + "|".join(header) + "|")
+    lines.append(separator)
+
+    # Body rows
+    for hour in hours:
+        row = [hour.center(col_width)]
+        for day in days:
+            cell = table[hour][day]
+            row.append(cell.center(col_width))
+        lines.append("|" + "|".join(row) + "|")
+        lines.append(separator)
+
+    # Write to file
+    with open("final_schedule.txt", "w") as f:
+        f.write("Final Weekly Schedule\n\n")
+        for line in lines:
+            f.write(line + "\n")
 
 def main():
     print("Scheduler initialized.")
@@ -160,7 +207,4 @@ if __name__ == "__main__":
     final_schedule = schedule_tasks(tasks, time_slots)
 
     # Print the final schedule
-    print("\nFinal Schedule:")
-    for slot in time_slots:
-        if slot in final_schedule:
-            print(f"{slot}: {final_schedule[slot].name}")
+    display_schedule(final_schedule, time_slots)
