@@ -117,7 +117,7 @@ def schedule_tasks(tasks, time_slots):
     return schedule
 
 def display_schedule(schedule, time_slots):
-    """ Displays weekly schedule in table format """
+    """ Displays weekly schedule in a txt file in table format """
 
     days = ["M", "T", "W", "TH", "F", "SA", "SU"]
     hours = [
@@ -156,7 +156,6 @@ def display_schedule(schedule, time_slots):
 
     # Write to file
     with open("final_schedule.txt", "w") as f:
-        f.write("Final Weekly Schedule\n\n")
         for line in lines:
             f.write(line + "\n")
 
