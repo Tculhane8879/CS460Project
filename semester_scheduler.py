@@ -27,3 +27,38 @@ time_slots = [
     "SU 4pm", "SU 5pm", "SU 6pm", "SU 7pm", "SU 8pm", "SU 9pm", "SU 10pm", "SU 11pm", "SU 12am",
 ]
 
+def get_user_preferences():
+
+    # Number of classes
+    num_required = int(input("How many required classes would you like to take? (max 3)"))
+    num_electives = int(input("How many elective classes would you like to take? (max 3)"))
+
+    print("\nNow rate your preferences on a scale from 0 (no preference) to 3 (strong preference):\n")
+
+    # Class preferences
+    class_morning_pref = int(input("Preference for morning classes (start before 1pm): "))
+    class_night_pref = int(input("Preference for night classes (start after 1pm): "))
+
+    # Work preferences
+    work_morning_pref = int(input("Preference for working in the morning: "))
+    work_night_pref = int(input("Preference for working in the evening: "))
+    work_weekend_pref = int(input("How much do you want to avoid working on weekends (0 = don’t care, 3 = strongly avoid)? "))
+
+    return {
+        "num_required": num_required,
+        "num_electives": num_electives,
+        "class_prefs": {
+            "prefer_morning_class": class_morning_pref,
+            "prefer_night_class": class_night_pref
+        },
+        "work_prefs": {
+            "prefer_morning_work": work_morning_pref,
+            "prefer_night_work": work_night_pref,
+            "avoid_weekend_work": work_weekend_pref
+        }
+    }
+
+if __name__ == "__main__":
+    prefs = get_user_preferences()
+    print("\nYour preferences have been recorded:")
+    print(prefs)
