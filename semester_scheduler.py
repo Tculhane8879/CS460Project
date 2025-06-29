@@ -8,6 +8,7 @@ Description:    Greedy algorithm for assigning tasks to time slots based
 """
 
 from structure import Section, Course
+from collections import defaultdict
 from course_data import courses
 from itertools import combinations
 
@@ -60,6 +61,49 @@ def get_user_preferences():
         }
     }
 
+def display_schedule(schedule, time_slots):
+    """ Displays weekly schedule in a txt file in table format """
+
+    days = ["M", "T", "W", "TH", "F", "SA", "SU"]
+    hours = [
+        "7am", "8am", "9am", "10am", "11am", "12pm", "1pm", "2pm", "3pm", 
+        "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm", "12am"
+    ]
+
+    col_width = 36
+    total_cols = len(days) + 1
+    separator = "+" + "+".join(["-" * col_width for _ in range(total_cols)]) + "+"
+
+    # Build the schedule table
+    table = defaultdict(lambda: {day: "" for day in days})
+    for slot, activity in schedule.items():
+        day, hour = slot.split()
+        table[hour][day] = activity
+
+    # Build output lines manually
+    lines = []
+    lines.append("Final Weekly Schedule\n")
+    lines.append(separator)
+
+    # Header row
+    header = ["Time".center(col_width)] + [day.center(col_width) for day in days]
+    lines.append("|" + "|".join(header) + "|")
+    lines.append(separator)
+
+    # Body rows
+    for hour in hours:
+        row = [hour.center(col_width)]
+        for day in days:
+            cell = table[hour][day]
+            row.append(cell.center(col_width))
+        lines.append("|" + "|".join(row) + "|")
+        lines.append(separator)
+
+    # Write to file
+    with open("final_schedule.txt", "w") as f:
+        for line in lines:
+            f.write(line + "\n")
+
 def assign_course_score(section, class_prefs):
     """ Score a course/section based on user class time preferences. """
     score = 0
@@ -111,22 +155,22 @@ def score_work_block(block_slots, work_prefs):
             score -= work_prefs.get("avoid_weekend_work", 0)
     return score
 
-def schedule_courses(courses, prefs, time_slots):
+def create_schedule(courses, prefs, time_slots):
     """ Core scheduling algorithm. """
     
     # Create empty schedule dict[str, str]
     schedule = {}  # time_slot → course_name
+    selected_courses = []
 
     # Get user preferences
     num_required = prefs["num_required"]
     num_electives = prefs["num_electives"]
     class_prefs = prefs["class_prefs"]
+    work_prefs = prefs["work_prefs"]
 
     # Split potential course options into required and elective
     required_courses = [c for c in courses if c.required]
     elective_courses = [c for c in courses if not c.required]
-
-    selected_courses = []
 
     # Add required courses to schedule
     for course in required_courses:
@@ -185,9 +229,40 @@ def schedule_courses(courses, prefs, time_slots):
     for name, section in selected_courses:
         print(f"  {name} → {section}")
 
+    # Assign work availability time blocks
+    total_availability_hrs = 0
+    min_block_size = 4
+    min_required_hrs = 20
+
+    # Search for valid time blocks for work availability
+    blocks = find_work_blocks(schedule, time_slots, min_block_size)
+    block_scores = []
+
+    # Loop through all open blocks
+    for start_idx, size in blocks:
+        block_slots = time_slots[start_idx:start_idx + size]    # Get time block string representation
+        score = score_work_block(block_slots, work_prefs)       # Assign scores to time blocks
+        block_scores.append((score, start_idx, size))           # Add scores of each time block to list
+
+    # Sort scores highest to lowest
+    block_scores.sort(reverse=True)
+
+    for score, start_idx, size in block_scores:
+        # Stop if 20+ total work hours have been scheduled
+        if total_availability_hrs >= min_required_hrs:
+            break
+
+        block_slots = time_slots[start_idx:start_idx + size]
+        hours_to_add = min(min_required_hrs, size)
+        # Schedule available to work hours
+        for slot in block_slots[:hours_to_add]:
+            schedule[slot] = "Work"
+        total_availability_hrs += hours_to_add
+
     # Return the completed schedule
     return schedule
 
 if __name__ == "__main__":
     prefs = get_user_preferences()
-    schedule = schedule_courses(courses, prefs, time_slots)
+    schedule = create_schedule(courses, prefs, time_slots)
+    display_schedule(schedule, time_slots)
