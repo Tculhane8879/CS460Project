@@ -74,6 +74,28 @@ def assign_course_score(section, class_prefs):
 
     return score
 
+def find_work_blocks(schedule, time_slots, min_block_size=4):
+    """ Creates a list of valid work availability blocks (at least 4 consecutive hours). """
+    
+    open_blocks = []
+    i = 0
+    # Iterate until time block is < 4 hours, becoming invalid for work availability
+    while i <= len(time_slots) - min_block_size:
+        block = []
+        for j in range(i, len(time_slots)):
+            slot = time_slots[j]
+            # Stop if part of time block is already scheduled
+            if slot in schedule:
+                break
+            # Record time blocks of >= 4 hours, continue until time block becomes invalid
+            block.append(slot)
+            if len(block) >= min_block_size:
+                open_blocks.append((i, len(block)))
+        # If time block was invalid check starting at next index, else jump to after previous valid time block 
+        i += 1 if not block else len(block)
+    # Return list of valid work availability blocks
+    return open_blocks
+
 def schedule_courses(courses, prefs, time_slots):
     """ Core scheduling algorithm. """
     
