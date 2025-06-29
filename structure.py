@@ -27,7 +27,7 @@ class Section:
         end = parse_time(self.end_time)
         hour_range = []
         while start < end:
-            hour_label = start.strftime("%-I%p").lower()
+            hour_label = start.strftime("%I%p").lstrip("0").lower()
             hour_range.append(hour_label)
             start += datetime.timedelta(hours=1)
 

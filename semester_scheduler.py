@@ -8,6 +8,7 @@ Description:    Greedy algorithm for assigning tasks to time slots based
 """
 
 from structure import Section, Course
+from course_data import courses
 
 # all time slots tasks can be assigned to
 time_slots = [
@@ -58,7 +59,84 @@ def get_user_preferences():
         }
     }
 
+def assign_course_score(section, class_prefs):
+    """ Score a course/section based on user class time preferences. """
+    score = 0
+    for slot in section.get_time_slots():
+        _, hour = slot.split()
+
+        # Time-of-day scoring
+        if hour in {"7am", "8am", "9am", "10am", "11am", "12pm"}:
+            score += class_prefs.get("prefer_morning_class", 0)
+        else:
+            score += class_prefs.get("prefer_night_class", 0)
+
+    return score
+
+def schedule_courses(courses, prefs, time_slots):
+    from itertools import combinations
+    schedule = {}  # time_slot → course_name
+
+    # Get preferences
+    num_required = prefs["num_required"]
+    num_electives = prefs["num_electives"]
+    class_prefs = prefs["class_prefs"]
+
+    # Split courses into required and elective
+    required_courses = [c for c in courses if c.required]
+    elective_courses = [c for c in courses if not c.required]
+
+    selected_courses = []
+
+    # Assign required courses first
+    for course in required_courses:
+        if len(selected_courses) >= num_required:
+            break
+
+        best_section = None
+        best_score = float('-inf')
+
+        for section in course.sections:
+            slots = section.get_time_slots()
+            if all(slot not in schedule for slot in slots):
+                score = assign_course_score(section, class_prefs)
+                if score > best_score:
+                    best_score = score
+                    best_section = section
+
+        if best_section:
+            for slot in best_section.get_time_slots():
+                schedule[slot] = course.name
+            selected_courses.append((course.name, best_section))
+
+    # Assign elective courses
+    for course in elective_courses:
+        if len(selected_courses) >= num_required + num_electives:
+            break
+
+        best_section = None
+        best_score = float('-inf')
+
+        for section in course.sections:
+            slots = section.get_time_slots()
+            if all(slot not in schedule for slot in slots):
+                score = assign_course_score(section, class_prefs)
+                if score > best_score:
+                    best_score = score
+                    best_section = section
+
+        if best_section:
+            for slot in best_section.get_time_slots():
+                schedule[slot] = course.name
+            selected_courses.append((course.name, best_section))
+
+    # Output courses selected
+    print("\nCourses Selected :")
+    for name, section in selected_courses:
+        print(f"  {name} → {section}")
+
+    return schedule
+
 if __name__ == "__main__":
     prefs = get_user_preferences()
-    print("\nYour preferences have been recorded:")
-    print(prefs)
+    schedule = schedule_courses(courses, prefs, time_slots)
