@@ -70,15 +70,18 @@ def display_schedule(schedule, time_slots):
         "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm", "12am"
     ]
 
-    col_width = 36
+    col_width = 50
     total_cols = len(days) + 1
     separator = "+" + "+".join(["-" * col_width for _ in range(total_cols)]) + "+"
+
+    valid_days = {"M", "T", "W", "TH", "F", "SA", "SU"}
 
     # Build the schedule table
     table = defaultdict(lambda: {day: "" for day in days})
     for slot, activity in schedule.items():
         day, hour = slot.split()
         table[hour][day] = activity
+        # print(f"Placing '{activity}' in column '{day}' at row '{hour}'")
 
     # Build output lines manually
     lines = []

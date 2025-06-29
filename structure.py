@@ -16,12 +16,16 @@ class Section:
         days_map = {
             "M": ["M"], "T": ["T"], "W": ["W"], "TH": ["TH"],
             "F": ["F"], "SA": ["SA"], "SU": ["SU"],
-            "MW": ["M", "W"], "TTh": ["T", "TH"], "MWF": ["M", "W", "F"]
+            "MW": ["M", "W"], "TTH": ["T", "TH"], "MWF": ["M", "W", "F"]
         }
 
-        # Convert time string to hour integers
+        # Normalize key
+        key = self.days.upper()
+        section_days = days_map.get(key, [key])  # fallback in case key isn't mapped
+
+        # Parse time range into hour labels
         def parse_time(tstr):
-            return datetime.datetime.strptime(tstr, "%I:%M" if ":" in tstr else "%I")
+            return datetime.datetime.strptime(tstr.strip().lower(), "%I:%M%p")
 
         start = parse_time(self.start_time)
         end = parse_time(self.end_time)
@@ -31,7 +35,7 @@ class Section:
             hour_range.append(hour_label)
             start += datetime.timedelta(hours=1)
 
-        return [f"{day} {hour}" for day in days_map[self.days] for hour in hour_range]
+        return [f"{day} {hour}" for day in section_days for hour in hour_range]
 
 
 class Course:
