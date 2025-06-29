@@ -96,6 +96,21 @@ def find_work_blocks(schedule, time_slots, min_block_size=4):
     # Return list of valid work availability blocks
     return open_blocks
 
+def score_work_block(block_slots, work_prefs):
+    """ Scores valid work availability blocks of time. """
+    score = 0
+    for slot in block_slots:
+        day, hour = slot.split()
+        # Time-of-day scoring
+        if hour in {"7am", "8am", "9am", "10am", "11am"}:
+            score += work_prefs.get("prefer_morning_work", 0)
+        elif hour in {"5pm", "6pm", "7pm", "8pm", "9pm"}:
+            score += work_prefs.get("prefer_night_work", 0)
+        # Weekend working preference scoring
+        if day in {"SA", "SU"}:
+            score -= work_prefs.get("avoid_weekend_work", 0)
+    return score
+
 def schedule_courses(courses, prefs, time_slots):
     """ Core scheduling algorithm. """
     
