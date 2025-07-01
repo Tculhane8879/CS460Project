@@ -1,5 +1,3 @@
-# ARCHIVED: Replaced by semester_scheduler.py
-
 """
 Personal Schedule Optimizer
 
