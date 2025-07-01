@@ -10,7 +10,6 @@ Description:    Greedy algorithm for assigning tasks to time slots based
 from structure import Section, Course
 from collections import defaultdict
 from course_data import courses
-from itertools import combinations
 
 # all time slots tasks can be assigned to
 time_slots = [
