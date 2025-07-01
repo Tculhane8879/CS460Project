@@ -119,6 +119,11 @@ def assign_course_score(section, class_prefs):
         else:
             score += class_prefs.get("prefer_night_class", 0)
 
+        # Bonus for 1 day/week sections
+        unique_days = {slot.split()[0] for slot in time_slots}
+        if len(unique_days) == 1:
+            score += 2 
+
     return score
 
 def find_work_blocks(schedule, time_slots, min_block_size=4):
@@ -143,11 +148,15 @@ def find_work_blocks(schedule, time_slots, min_block_size=4):
     # Return list of valid work availability blocks
     return open_blocks
 
-def score_work_block(block_slots, work_prefs):
+def score_work_block(block_slots, work_prefs, days_with_work=None):
     """ Scores valid work availability blocks of time. """
     score = 0
+    slots_by_day = defaultdict(list)
+
     for slot in block_slots:
         day, hour = slot.split()
+        slots_by_day[day].append(hour)
+
         # Time-of-day scoring
         if hour in {"7am", "8am", "9am", "10am", "11am"}:
             score += work_prefs.get("prefer_morning_work", 0)
@@ -156,6 +165,15 @@ def score_work_block(block_slots, work_prefs):
         # Weekend working preference scoring
         if day in {"SA", "SU"}:
             score -= work_prefs.get("avoid_weekend_work", 0)
+
+        # Bonus for work on a day with no other work
+        if days_with_work is not None:
+            new_days = [day for day in slots_by_day if day not in days_with_work]
+            score += len(new_days)
+
+        # Bonus for longer blocks
+        score += len(block_slots) // 2
+
     return score
 
 def create_schedule(courses, prefs, time_slots):
@@ -255,10 +273,13 @@ def create_schedule(courses, prefs, time_slots):
     max_hours_per_day = 8
     daily_work_hours = defaultdict(int)
 
+    # Loop through work blocks from highest score to lowest
     for score, start_idx, size in block_scores:
+        # Stop if min hrs are reached
         if total_availability_hrs >= min_required_hrs:
             break
 
+        # Get list of time slots for work scheduling
         block_slots = time_slots[start_idx:start_idx + size]
 
         # Count work hours per day
@@ -270,8 +291,10 @@ def create_schedule(courses, prefs, time_slots):
         accepted_slots = []
 
         for day, slots in slots_by_day.items():
+            # Continue if max hrs for a day is reached
             if daily_work_hours[day] >= max_hours_per_day:
                 continue
+            # Assign available work blocks until min hrs reached
             available = max_hours_per_day - daily_work_hours[day]
             to_use = min(len(slots), available, min_required_hrs - total_availability_hrs)
             accepted_slots.extend(slots[:to_use])
