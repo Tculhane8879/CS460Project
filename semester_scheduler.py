@@ -301,11 +301,16 @@ def create_schedule(courses, prefs, time_slots):
             daily_work_hours[day] += to_use
             days_with_work.add(day)
             total_availability_hrs += to_use
+            # Stop when min hrs are assigned
             if total_availability_hrs >= min_required_hrs:
                 break
-
+    
+    # Schedule work slots            
     for slot in accepted_slots:
         schedule[slot] = "Work"
+
+    # Output total availability hours
+    print(f"Total work availability hours: {total_availability_hrs}")
 
     # Return the completed schedule
     return schedule
