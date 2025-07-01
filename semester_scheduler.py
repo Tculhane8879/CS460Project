@@ -103,7 +103,7 @@ def display_schedule(schedule, time_slots):
         lines.append(separator)
 
     # Write to file
-    with open("final_schedule.txt", "w") as f:
+    with open("schedule.txt", "w") as f:
         for line in lines:
             f.write(line + "\n")
 
@@ -250,17 +250,39 @@ def create_schedule(courses, prefs, time_slots):
     # Sort scores highest to lowest
     block_scores.sort(reverse=True)
 
+    days_with_work = set()
+    # max of 8 hrs availability per day
+    max_hours_per_day = 8
+    daily_work_hours = defaultdict(int)
+
     for score, start_idx, size in block_scores:
-        # Stop if 20+ total work hours have been scheduled
         if total_availability_hrs >= min_required_hrs:
             break
 
         block_slots = time_slots[start_idx:start_idx + size]
-        hours_to_add = min(min_required_hrs, size)
-        # Schedule available to work hours
-        for slot in block_slots[:hours_to_add]:
-            schedule[slot] = "Work"
-        total_availability_hrs += hours_to_add
+
+        # Count work hours per day
+        slots_by_day = defaultdict(list)
+        for slot in block_slots:
+            day, hour = slot.split()
+            slots_by_day[day].append(slot)
+
+        accepted_slots = []
+
+        for day, slots in slots_by_day.items():
+            if daily_work_hours[day] >= max_hours_per_day:
+                continue
+            available = max_hours_per_day - daily_work_hours[day]
+            to_use = min(len(slots), available, min_required_hrs - total_availability_hrs)
+            accepted_slots.extend(slots[:to_use])
+            daily_work_hours[day] += to_use
+            days_with_work.add(day)
+            total_availability_hrs += to_use
+            if total_availability_hrs >= min_required_hrs:
+                break
+
+    for slot in accepted_slots:
+        schedule[slot] = "Work"
 
     # Return the completed schedule
     return schedule
